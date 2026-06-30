@@ -1,0 +1,43 @@
+# generated: 2026-06-29
+# last_updated: 2026-06-29
+# project: TitleGen
+# tracking_system: file-system
+# story_location: stories/
+
+generated: "2026-06-29"
+last_updated: "2026-06-29"
+project: TitleGen
+tracking_system: file-system
+story_location: stories/
+
+development_status:
+  epic-1: in-progress
+  1-1-scaffolding: review
+  1-2-schemas: review
+  epic-1-retrospective: optional
+
+  epic-2: backlog
+  2-1-sessionstore: review
+  2-2-promptservice: review
+  epic-2-retrospective: optional
+
+  epic-3: backlog
+  3-1-claudeservice: review
+  epic-3-retrospective: optional
+
+  epic-4: backlog
+  4-1-analyze: review
+  4-2-generate-title: review
+  4-3-differentiate: review
+  4-4-refine: review
+  epic-4-retrospective: optional
+
+  epic-5: backlog
+  5-1-phase1-ui: review
+  5-2-phase2-4-ui: review
+  5-3-phase5-ui: review
+  epic-5-retrospective: optional
+
+  epic-6: backlog
+  6-1-deployment: backlog
+  epic-6-retrospective: optional

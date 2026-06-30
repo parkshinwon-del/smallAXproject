@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TitleGen</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+      background: #f1f3f4;
+      color: #202124;
+      min-height: 100vh;
+      padding: 1.5rem 1rem 3rem;
+    }
+
+    .wrap { max-width: 680px; margin: 0 auto; }
+
+    /* ── 상단 바 ── */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #fff; border: 1px solid #dadce0; border-radius: 12px;
+      padding: .75rem 1.25rem; margin-bottom: 1.5rem;
+    }
+    .logo { font-size: 16px; font-weight: 600; }
+    .logo span { color: #1a73e8; }
+    .badge {
+      font-size: 11px; padding: 3px 10px; border-radius: 20px;
+      background: #e8f0fe; color: #1a73e8;
+    }
+
+    /* ── 카드 ── */
+    .phase { margin-bottom: 1.2rem; }
+    .phase-label {
+      font-size: 11px; font-weight: 600; letter-spacing: .06em;
+      text-transform: uppercase; color: #5f6368;
+      display: flex; align-items: center; gap: 6px; margin-bottom: .5rem;
+    }
+    .phase-num {
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #e8f0fe; color: #1a73e8;
+      font-size: 10px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .card {
+      background: #fff; border: 1px solid #dadce0;
+      border-radius: 12px; padding: 1rem 1.25rem;
+    }
+
+    /* ── 입력 요소 ── */
+    label.field-label { display: block; font-size: 12px; color: #5f6368; margin-bottom: 5px; }
+    textarea, input[type="text"] {
+      width: 100%; border: 1px solid #dadce0; border-radius: 8px;
+      padding: 8px 10px; font-size: 13px; color: #202124;
+      background: #f8f9fa; font-family: inherit; resize: none; outline: none;
+      transition: border-color .15s;
+    }
+    textarea:focus, input[type="text"]:focus { border-color: #1a73e8; background: #fff; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+
+    /* ── 데이터랩 안내 ── */
+    .info-box {
+      background: #e6f4ea; border-radius: 8px;
+      padding: .7rem 1rem; margin-top: 12px;
+      font-size: 12px; color: #188038; line-height: 1.55;
+    }
+    .info-box a { color: #188038; font-weight: 600; }
+
+    /* ── 버튼 ── */
+    .btn-row { display: flex; gap: 8px; margin-top: 12px; }
+    .btn {
+      padding: 7px 18px; border-radius: 8px; font-size: 13px;
+      font-weight: 500; border: 1px solid #dadce0;
+      background: #fff; color: #202124; cursor: pointer;
+      transition: background .1s;
+    }
+    .btn:hover { background: #f1f3f4; }
+    .btn.primary {
+      background: #1a73e8; color: #fff; border-color: transparent;
+    }
+    .btn.primary:hover { background: #1557b0; }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+    /* ── 결과 박스 ── */
+    .result-box {
+      background: #f8f9fa; border: 1px solid #dadce0; border-radius: 8px;
+      padding: .75rem 1rem; min-height: 52px; margin-top: 10px;
+      font-size: 13px; line-height: 1.6; white-space: pre-wrap;
+      color: #202124;
+    }
+    .result-box.placeholder { color: #9aa0a6; }
+
+    /* ── 자동 프롬프트 칩 ── */
+    .chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; padding: 3px 9px; border-radius: 20px;
+      background: #f3e8fd; color: #6b3fa0; margin-top: 8px;
+    }
+
+    /* ── 구분선 ── */
+    .divider { height: 1px; background: #dadce0; margin: 12px 0; }
+    .arrow {
+      text-align: center; color: #9aa0a6; font-size: 18px;
+      margin: 4px 0; line-height: 1;
+    }
+
+    /* ── 루프 카운터 ── */
+    .loop-counter { font-size: 11px; color: #9aa0a6; margin-top: 6px; }
+
+    /* ── 체크박스 ── */
+    .check-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+    .check-row input[type="checkbox"] { width: 15px; height: 15px; accent-color: #1a73e8; }
+    .check-row label { font-size: 13px; cursor: pointer; }
+
+    /* ── 완료 메시지 ── */
+    .complete-box {
+      display: none; background: #e6f4ea; border-radius: 8px;
+      padding: .85rem 1rem; margin-top: 12px;
+      font-size: 14px; font-weight: 600; color: #188038;
+      align-items: center; gap: 8px;
+    }
+    .complete-box.show { display: flex; }
+
+    /* ── 에러 메시지 ── */
+    .error-msg {
+      display: none; background: #fce8e6; border-radius: 8px;
+      padding: .6rem 1rem; margin-top: 8px;
+      font-size: 12px; color: #c5221f;
+    }
+    .error-msg.show { display: block; }
+
+    /* ── 스피너 ── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid #fff; border-top-color: transparent;
+      border-radius: 50%; animation: spin .6s linear infinite;
+      vertical-align: middle; margin-right: 4px;
+    }
+    .btn.loading .spinner { display: inline-block; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 상단 바 -->
+  <div class="topbar">
+    <div class="logo">Title<span>Gen</span></div>
+    <span class="badge">Claude API 연동</span>
+  </div>
+
+  <!-- ── Phase 1: 데이터 수집 ── -->
+  <div class="phase">
+    <div class="phase-label"><span class="phase-num">1</span>데이터 수집</div>
+    <div class="card">
+      <label class="field-label" for="content">콘텐츠 텍스트</label>
+      <textarea id="content" rows="4"
+        placeholder="글 내용, 주제, 키워드를 자유롭게 입력하세요"></textarea>
+
+      <div class="row2">
+        <div>
+          <label class="field-label" for="product_name">상품명</label>
+          <input type="text" id="product_name" placeholder="예: 무릎 보호대 실리콘" />
+        </div>
+        <div>
+          <label class="field-label" for="target">타겟 성별·나이대</label>
+          <input type="text" id="target" placeholder="예: 50~60대 여성" />
+        </div>
+      </div>
+
+      <div class="info-box">
+        ℹ&nbsp; 네이버 데이터랩의 쇼핑 인사이트에서 타겟의 성별과 나이대를 직접 검색해주세요.
+        꼭 마케팅 콘텐츠 아니어도 좋습니다. 콘텐츠 검색자의 특성을 파악해보세요.<br>
+        <a href="https://datalab.naver.com/shoppingInsight/sCategory.naver"
+           target="_blank" rel="noopener">데이터랩 바로가기 →</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <!-- ── Phase 2: 타겟 분석 ── -->
+  <div class="phase">
+    <div class="phase-label"><span class="phase-num">2</span>타겟 분석 보고서</div>
+    <div class="card">
+      <div class="btn-row">
+        <button class="btn primary" id="btn-analyze" onclick="doAnalyze()">
+          분석 시작
+        </button>
+      </div>
+      <span class="chip">🔒 자동 프롬프트 포함</span>
+      <div id="err-analyze" class="error-msg"></div>
+      <div id="result-analyze" class="result-box placeholder">분석 결과가 여기에 표시됩니다</div>
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <!-- ── Phase 3: 제목 생성 ── -->
+  <div class="phase">
+    <div class="phase-label"><span class="phase-num">3</span>제목 생성</div>
+    <div class="card">
+      <div class="btn-row">
+        <button class="btn primary" id="btn-title" onclick="doGenerateTitle()" disabled>
+          제목 생성
+        </button>
+      </div>
+      <span class="chip">🔒 상품명 앞배치 · 15자 미만 · SNS 어조</span>
+      <div id="err-title" class="error-msg"></div>
+      <div id="result-title" class="result-box placeholder">제목이 여기에 표시됩니다</div>
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <!-- ── Phase 4: 차별화 ── -->
+  <div class="phase">
+    <div class="phase-label"><span class="phase-num">4</span>제목 차별화</div>
+    <div class="card">
+      <div class="btn-row">
+        <button class="btn primary" id="btn-diff" onclick="doDifferentiate()" disabled>
+          차별화
+        </button>
+      </div>
+      <span class="chip">🔒 네이버 상위노출 대비 차별화</span>
+      <div id="err-diff" class="error-msg"></div>
+      <div id="result-diff" class="result-box placeholder">차별화 제목이 여기에 표시됩니다</div>
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <!-- ── Phase 5: 피드백 & 완료 ── -->
+  <div class="phase">
+    <div class="phase-label"><span class="phase-num">5</span>피드백 &amp; 완료</div>
+    <div class="card">
+      <label class="field-label" for="feedback">개선하고 싶은 부분을 쓰세요</label>
+      <textarea id="feedback" rows="2"
+        placeholder="예: 좀 더 젊은 어조로 바꿔줘"></textarea>
+      <div class="loop-counter" id="loop-counter">남은 피드백 횟수: 2 / 2</div>
+
+      <div class="btn-row">
+        <button class="btn primary" id="btn-refine" onclick="doRefine()" disabled>
+          재생성
+        </button>
+      </div>
+      <div id="err-refine" class="error-msg"></div>
+      <div id="result-refine" class="result-box placeholder" style="display:none">
+        재생성 결과가 여기에 표시됩니다
+      </div>
+
+      <div class="divider"></div>
+      <div class="field-label">더 수정하고 싶으세요?</div>
+
+      <div class="check-row">
+        <input type="checkbox" id="chk-yes" onchange="onCheckYes()" />
+        <label for="chk-yes">네, 더 수정할게요</label>
+      </div>
+      <div class="check-row">
+        <input type="checkbox" id="chk-no" onchange="onCheckNo()" />
+        <label for="chk-no">아니요, 완성했어요</label>
+      </div>
+
+      <div class="complete-box" id="complete-box">
+        ✅ 제목이 완성되었습니다!
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const API = '';  // 같은 서버 origin
+  let sessionId = null;
+  let loopRemain = 2;
+
+  // ── 유틸 ──────────────────────────────────────────────
+  function setResult(elId, text, isPlaceholder = false) {
+    const el = document.getElementById(elId);
+    el.textContent = text;
+    el.classList.toggle('placeholder', isPlaceholder);
+    el.style.display = '';
+  }
+
+  function setError(elId, msg) {
+    const el = document.getElementById(elId);
+    el.textContent = msg;
+    el.classList.toggle('show', !!msg);
+  }
+
+  function setLoading(btnId, loading) {
+    const btn = document.getElementById(btnId);
+    if (loading) {
+      btn._origText = btn.innerHTML;
+      btn.innerHTML = '<span class="spinner"></span>처리 중...';
+      btn.disabled = true;
+    } else {
+      btn.innerHTML = btn._origText || btn.innerHTML;
+      btn.disabled = false;
+    }
+  }
+
+  async function apiFetch(path, body) {
+    const res = await fetch(API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(err.detail || '알 수 없는 오류');
+    }
+    return res.json();
+  }
+
+  // ── Phase 2: 분석 ─────────────────────────────────────
+  async function doAnalyze() {
+    const product_name = document.getElementById('product_name').value.trim();
+    const content = document.getElementById('content').value.trim();
+    const target = document.getElementById('target').value.trim();
+
+    if (!product_name || !content || !target) {
+      setError('err-analyze', '상품명, 콘텐츠, 타겟을 모두 입력해주세요.');
+      return;
+    }
+    setError('err-analyze', '');
+    setLoading('btn-analyze', true);
+
+    try {
+      const data = await apiFetch('/api/analyze', { product_name, content, target });
+      sessionId = data.session_id;
+      setResult('result-analyze', data.report_text);
+      document.getElementById('btn-title').disabled = false;
+    } catch (e) {
+      setError('err-analyze', '오류: ' + e.message);
+    } finally {
+      setLoading('btn-analyze', false);
+    }
+  }
+
+  // ── Phase 3: 제목 생성 ────────────────────────────────
+  async function doGenerateTitle() {
+    setError('err-title', '');
+    setLoading('btn-title', true);
+    try {
+      const data = await apiFetch('/api/generate-title', { session_id: sessionId });
+      setResult('result-title', data.title_text);
+      document.getElementById('btn-diff').disabled = false;
+    } catch (e) {
+      setError('err-title', '오류: ' + e.message);
+    } finally {
+      setLoading('btn-title', false);
+    }
+  }
+
+  // ── Phase 4: 차별화 ──────────────────────────────────
+  async function doDifferentiate() {
+    setError('err-diff', '');
+    setLoading('btn-diff', true);
+    try {
+      const data = await apiFetch('/api/differentiate', { session_id: sessionId });
+      setResult('result-diff', data.diff_title);
+      document.getElementById('btn-refine').disabled = false;
+    } catch (e) {
+      setError('err-diff', '오류: ' + e.message);
+    } finally {
+      setLoading('btn-diff', false);
+    }
+  }
+
+  // ── Phase 5: 피드백 재생성 ────────────────────────────
+  async function doRefine() {
+    const feedback = document.getElementById('feedback').value.trim();
+    if (!feedback) {
+      setError('err-refine', '개선 내용을 입력해주세요.');
+      return;
+    }
+    if (loopRemain <= 0) {
+      setError('err-refine', '피드백 최대 횟수(2회)에 도달했습니다.');
+      return;
+    }
+    setError('err-refine', '');
+    setLoading('btn-refine', true);
+
+    try {
+      const data = await apiFetch('/api/refine', { session_id: sessionId, feedback });
+      loopRemain--;
+      document.getElementById('loop-counter').textContent =
+        `남은 피드백 횟수: ${loopRemain} / 2`;
+      setResult('result-refine', data.refined_title);
+      if (loopRemain <= 0) {
+        document.getElementById('btn-refine').disabled = true;
+      }
+    } catch (e) {
+      if (e.message.includes('초과')) {
+        setError('err-refine', '피드백 최대 횟수(2회)에 도달했습니다.');
+        document.getElementById('btn-refine').disabled = true;
+      } else {
+        setError('err-refine', '오류: ' + e.message);
+      }
+    } finally {
+      setLoading('btn-refine', false);
+    }
+  }
+
+  // ── YES / NO 체크박스 ─────────────────────────────────
+  function onCheckYes() {
+    const yes = document.getElementById('chk-yes');
+    if (yes.checked) {
+      document.getElementById('chk-no').checked = false;
+      document.getElementById('complete-box').classList.remove('show');
+      document.getElementById('feedback').focus();
+    }
+  }
+
+  function onCheckNo() {
+    const no = document.getElementById('chk-no');
+    if (no.checked) {
+      document.getElementById('chk-yes').checked = false;
+      document.getElementById('complete-box').classList.add('show');
+    } else {
+      document.getElementById('complete-box').classList.remove('show');
+    }
+  }
+</script>
+</body>
+</html>
