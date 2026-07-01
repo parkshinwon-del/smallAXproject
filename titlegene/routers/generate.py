@@ -17,13 +17,16 @@ session_store = SessionStore()
 #SessionStore 클래스의 **인스턴스(실제 객체)**를 하나 만드는 거
 claude_service = ClaudeService(session_store)
 #ClaudeService라는 객체도 하나 만드는데, 방금 만든 session_store를 생성자 인자로 넘겨줘요.
-
+#???위 두줄 의미는 알겠는데, 왜그런지 모르겟음.
 
 def _require_session(session_id: str) -> None:
+    
+    #session_id = 내 대화 기록을 찾는 열쇠
     try:
         session_store.get_history(session_id)
         #session_store에서 해당 session_id의 기록을 꺼내봐요.
         #여기서 실제로 기록을 쓰려는 게 아니에요. 그냥 "이 ID가 존재하냐?"를 확인하는 용도로 호출하는 거예요.
+        #None은 아무것도 반환하지 않는다.
     except KeyError:
         raise HTTPException(status_code=404, detail=f"세션을 찾을 수 없습니다: {session_id}")
 
