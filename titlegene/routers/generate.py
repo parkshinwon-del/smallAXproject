@@ -22,7 +22,7 @@ claude_service = ClaudeService(session_store)
 def _require_session(session_id: str) -> None:
     try:
         session_store.get_history(session_id)
-        #ession_store에서 해당 session_id의 기록을 꺼내봐요.
+        #session_store에서 해당 session_id의 기록을 꺼내봐요.
         #여기서 실제로 기록을 쓰려는 게 아니에요. 그냥 "이 ID가 존재하냐?"를 확인하는 용도로 호출하는 거예요.
     except KeyError:
         raise HTTPException(status_code=404, detail=f"세션을 찾을 수 없습니다: {session_id}")
@@ -84,8 +84,11 @@ async def differentiate(req: DiffRequest):
 # 사용자가 "좀 더 친근하게 바꿔줘" 같은 피드백을 함께 보내는 거예요.
 async def refine(req: RefineRequest):
     _require_session(req.session_id)
+    #세션 존재 확인. 없으면 404 반환하고 종료.
     try:
         refined = claude_service.refine(req.session_id, req.feedback)
+    #Claude에게 피드백을 전달해서 제목 수정을 요청해요. 
+    # 이전 대화(분석 → 제목 → 차별화)를 다 기억한 채로 피드백만 추가로 반영해줘요.
     except LoopLimitError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except ClaudeAPIError as e:
